@@ -2,16 +2,28 @@
 #
 #
 
-bind() { goxhkc -button "$1" -command "$2" "$@"; }
+bind() {
+    btn=$1
+    cmd=$2
+    shift 2
+    goxhkc -button "$btn" -command "$cmd" "$@"
+}
 
-# currently unbind clears both onrelease and onpress events
-unbind() { goxhkc -button "$1" -clear "$@"; }
+unbind() {
+    btn=$1
+    shift
+    goxhkc -button "$btn" -clear "$@"
+}
+
+goxhkc -clearall
 
 bind 'Mod4-v' 'notify-send "Hey"'
-bind 'Mod4-v' 'notify-send "Also hey"' -onrelease
+bind 'Mod4-v' 'notify-send "Also hey on release"' -onrelease
 unbind 'Mod4-v'
+unbind 'Mod4-v' -onrelease
 
 bind 'Mod4-v' 'notify-send "Hey 123"'
 bind 'Mod4-v' 'notify-send "Also Hey 123"' -onrelease
 
 bind 'Mod4-shift-v' 'notify-send "Hello"'
+bind 'Mod4-shift-v' 'notify-send "Also hello on release"' -onrelease
