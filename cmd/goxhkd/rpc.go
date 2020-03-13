@@ -10,12 +10,12 @@ import (
 	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/comm"
 )
 
-type RPCAdapter struct {
+type GoRPC struct {
 	X    *xgbutil.XUtil
 	Conn *comm.Connection
 }
 
-func (r *RPCAdapter) listenAndServe() error {
+func (r *GoRPC) listenAndServe() error {
 	err := rpc.Register(r)
 	if err != nil {
 		return err
@@ -44,10 +44,10 @@ func (r *RPCAdapter) listenAndServe() error {
 	}
 }
 
-func (r *RPCAdapter) BindCommand(binding comm.Binding, _ *bool) error {
+func (r *GoRPC) BindCommand(binding comm.Binding, _ *bool) error {
 	return bindCommand(r.X, binding.Btn, binding.Cmd, binding.RunOnPress, binding.Repeating)
 }
 
-func (r *RPCAdapter) UnbindAll(_, _ *bool) error {
+func (r *GoRPC) UnbindAll(_, _ *bool) error {
 	return unbindAll(r.X)
 }

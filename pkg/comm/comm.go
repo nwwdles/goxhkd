@@ -1,6 +1,6 @@
 package comm
 
-const SocketAddr = "/tmp/goxhkd.sock"
+const DefaultSocketAddr = "/tmp/goxhkd.sock"
 
 type Connection struct {
 	Network string

@@ -17,19 +17,16 @@ func makeCommand(cmd string) (*exec.Cmd, error) {
 	return exec.Command(tokens[0], tokens[1:]...), err
 }
 
-func makeCmdRunner(cmd string) func() {
-	return func() {
+func makeCmdRunner(cmd string) func() error {
+	return func() error {
 		log.Println("Key press! Running:", cmd)
 
 		cmd, err := makeCommand(cmd)
 		if err != nil {
-			log.Println(err)
+			return err
 		}
 
-		err = cmd.Start()
-		if err != nil {
-			log.Println(err)
-		}
+		return cmd.Start()
 	}
 }
 
@@ -38,8 +35,10 @@ func keyIsPressed(x *xgbutil.XUtil, keycode xproto.Keycode) bool {
 	reply, err := ck.Reply()
 
 	if err != nil {
-		err = fmt.Errorf(": %w", err)
+		err = fmt.Errorf("failed to get key press state: %w", err)
 		log.Printf("%v", err)
+
+		return false
 	}
 
 	return reply.Keys[keycode>>3]&(0x1<<(keycode%8)) != 0
@@ -53,6 +52,12 @@ func bindCommand(x *xgbutil.XUtil, btn, cmd string, runOnPress, repeating bool) 
 	return bindCommandNonrepeating(x, btn, cmd, runOnPress)
 }
 
+func logErr(err error) {
+	if err != nil {
+		log.Println(err)
+	}
+}
+
 func bindCommandRepeating(x *xgbutil.XUtil, btn, cmd string, runOnPress bool) error {
 	var err error
 
@@ -60,11 +65,11 @@ func bindCommandRepeating(x *xgbutil.XUtil, btn, cmd string, runOnPress bool) er
 
 	if runOnPress {
 		err = keybind.KeyPressFun(func(x *xgbutil.XUtil, e xevent.KeyPressEvent) {
-			runCmd()
+			logErr(runCmd())
 		}).Connect(x, x.RootWin(), btn, true)
 	} else {
 		err = keybind.KeyReleaseFun(func(x *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
-			runCmd()
+			logErr(runCmd())
 		}).Connect(x, x.RootWin(), btn, true)
 	}
 
@@ -96,7 +101,7 @@ func bindCommandNonrepeating(x *xgbutil.XUtil, btn, cmd string, runOnPress bool)
 				return
 			}
 
-			runCmd()
+			logErr(runCmd())
 		}
 	}
 

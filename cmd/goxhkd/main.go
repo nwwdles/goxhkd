@@ -24,16 +24,13 @@ func main() {
 
 	keybind.Initialize(X)
 
-	ra := RPCAdapter{
+	ra := GoRPC{
 		X: X,
 		Conn: &comm.Connection{
 			Network: "unix",
-			Address: comm.SocketAddr,
+			Address: comm.DefaultSocketAddr,
 		},
 	}
-
-	// bindCommand(X, "Mod4-v", `notify-send 'hello world!'`, false, false)
-	// bindCommand(X, "Mod4-shift-v", `notify-send 'hello world 2!'`, false, true)
 
 	serverErrors := make(chan error, 1)
 

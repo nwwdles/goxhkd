@@ -14,11 +14,9 @@ func main() {
 	clearAll := flag.Bool("clearall", false, "clear all bindings")
 	flag.Parse()
 
-	// fmt.Println(*clearAll, *btn, *cmd, *clear)
-
 	conn := comm.Connection{
 		Network: "unix",
-		Address: comm.SocketAddr,
+		Address: comm.DefaultSocketAddr,
 	}
 
 	c, err := rpc.Dial(conn.Network, conn.Address)
@@ -28,12 +26,12 @@ func main() {
 	defer c.Close()
 
 	if btn != nil && cmd != nil {
-		err = c.Call("RPCAdapter.BindCommand", comm.Binding{
+		err = c.Call("GoRPC.BindCommand", comm.Binding{
 			Cmd: *cmd,
 			Btn: *btn,
 		}, nil)
 	} else if clearAll != nil {
-		err = c.Call("RPCAdapter.UnbindAll", nil, nil)
+		err = c.Call("GoRPC.UnbindAll", nil, nil)
 	}
 
 	if err != nil {
