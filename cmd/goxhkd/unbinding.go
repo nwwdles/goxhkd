@@ -24,26 +24,29 @@ func unbind(xu *xgbutil.XUtil, btn string, onRelease bool) error {
 		return err
 	}
 
-	code := codes[0]
+	var evtype int
 
-	switch {
-	case !onRelease:
-		detach(xu, xevent.KeyPress, xu.RootWin(), mod, code)
-	case onRelease:
-		detach(xu, xevent.KeyRelease, xu.RootWin(), mod, code)
+	if !onRelease {
+		evtype = xevent.KeyPress
+	} else {
+		evtype = xevent.KeyRelease
 	}
+
+	detach(xu, evtype, xu.RootWin(), mod, codes[0])
 
 	return nil
 }
 
-// taken from xgbutil
+// detach ubinds a single keybinding. It's based on detach() from xgbutil (which
+// unbinds all keys from the window) and accesses things that shouldn't be
+// accessed.
 func detach(xu *xgbutil.XUtil, evtype int, win xproto.Window, mods uint16,
 	keycode xproto.Keycode) {
 	xu.KeybindsLck.RLock()
 	defer xu.KeybindsLck.RUnlock()
 
 	for key := range xu.Keybinds {
-		if key.Win != win || key.Code != keycode ||
+		if win != key.Win || keycode != key.Code ||
 			evtype != key.Evtype || mods != key.Mod {
 			continue
 		}
