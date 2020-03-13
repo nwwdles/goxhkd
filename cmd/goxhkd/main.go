@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -18,6 +19,11 @@ const AppName = "goxhkd"
 const InitialRcRunDelay = 500 * time.Millisecond
 
 func main() {
+	conn := shared.DefaultSocketConnection()
+	flag.StringVar(&conn.Network, "network", conn.Network, "specify connection network (unix, tcp, ...)")
+	flag.StringVar(&conn.Address, "address", conn.Address, "specify connection address (socket path, host, ...)")
+	flag.Parse()
+
 	X, err := xgbutil.NewConn()
 	if err != nil {
 		log.Fatal(err)
@@ -27,7 +33,7 @@ func main() {
 
 	ra := GoRPC{
 		X:    X,
-		Conn: shared.DefaultSocketConnection(),
+		Conn: conn,
 	}
 
 	serverErrors := make(chan error, 1)
