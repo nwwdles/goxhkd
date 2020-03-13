@@ -1,4 +1,4 @@
-module github.com/cupnoodles14/goxhkd
+module github.com/cupnoodles14/scratchpad/go/goxhkd
 
 go 1.13
 
