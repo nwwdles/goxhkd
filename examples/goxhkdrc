@@ -2,15 +2,16 @@
 #
 #
 
-bind() { goxhkc -button "$1" -command "$2"; }
-unbind_both_evtypes() {
-    goxhkc -button "$1" -clear
-    goxhkc -button "$1" -onrelease -clear
-}
+bind() { goxhkc -button "$1" -command "$2" "$@"; }
+
+# currently unbind clears both onrelease and onpress events
+unbind() { goxhkc -button "$1" -clear "$@"; }
 
 bind 'Mod4-v' 'notify-send "Hey"'
-unbind_both_evtypes 'Mod4-v'
+bind 'Mod4-v' 'notify-send "Also hey"' -onrelease
+unbind 'Mod4-v'
 
 bind 'Mod4-v' 'notify-send "Hey 123"'
+bind 'Mod4-v' 'notify-send "Also Hey 123"' -onrelease
 
 bind 'Mod4-shift-v' 'notify-send "Hello"'
