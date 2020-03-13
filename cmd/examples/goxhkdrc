@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-#
-#
-
-bind() { goxhkc -button "$1" -command "$2"; }
-
-bind 'Mod4-v' 'notify-send "Hey"'
-bind 'Mod4-shift-v' 'notify-send "Hello"'
