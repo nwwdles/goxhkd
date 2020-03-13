@@ -37,17 +37,19 @@ func runRc() error {
 
 	xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
 	if xdgConfigHome == "" {
-		xdgConfigHome = path.Join(home, ".local", "share")
+		xdgConfigHome = path.Join(home, ".config")
 	}
 
-	err := tryExecRcPath(path.Join(xdgConfigHome, rcSubdir, rcName))
-	if err == nil {
-		return nil // return on success
-	}
-
-	err = tryExecRcPath(path.Join(home, "."+rcName))
-	if err == nil {
-		return nil // return on success
+	var err error
+	for _, rc := range []string{
+		path.Join(xdgConfigHome, rcSubdir, rcName),
+		path.Join(home, "."+rcName),
+		"/etc/goxhkd/goxhkdrc",
+	} {
+		err = tryExecRcPath(rc)
+		if err == nil {
+			return nil // return on success
+		}
 	}
 
 	return err
