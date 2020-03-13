@@ -16,7 +16,7 @@ import (
 )
 
 const AppName = "goxhkd"
-const InitialRcRunDelay = 500 * time.Millisecond
+const InitialRcRunDelay = 200 * time.Millisecond
 
 func main() {
 	conn := shared.DefaultSocketConnection()
