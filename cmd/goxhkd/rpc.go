@@ -46,14 +46,14 @@ func (r *GoRPC) listenAndServe() error {
 	}
 }
 
-func (r *GoRPC) BindCommand(b shared.Binding, _ *bool) error {
+func (r *GoRPC) BindCommand(b shared.Binding, _ *struct{}) error {
 	return bindCommand(r.X, b.Btn, b.Cmd, b.RunOnRelease, b.Repeating)
 }
 
-func (r *GoRPC) UnbindAll(_, _ *bool) error {
+func (r *GoRPC) UnbindAll(_ struct{}, _ *struct{}) error {
 	return unbindAll(r.X)
 }
 
-func (r *GoRPC) Unbind(b shared.Binding, _ *bool) error {
+func (r *GoRPC) Unbind(b shared.Binding, _ *struct{}) error {
 	return unbind(r.X, b.Btn, b.RunOnRelease)
 }

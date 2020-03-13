@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"net/rpc"
 
 	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/shared"
@@ -29,16 +28,14 @@ func main() {
 	}
 	defer c.Close()
 
-	if btn != nil {
+	if *btn != "" {
 		switch {
 		case *clear:
-			fmt.Println("clear")
 			err = c.Call("GoRPC.Unbind", shared.Binding{
 				Btn:          *btn,
 				RunOnRelease: *onRelease,
 			}, nil)
 		case *cmd != "":
-			fmt.Println("cmd")
 			err = c.Call("GoRPC.BindCommand", shared.Binding{
 				Cmd:          *cmd,
 				Btn:          *btn,
@@ -46,13 +43,13 @@ func main() {
 				Repeating:    *repeating,
 			}, nil)
 		default:
-			fmt.Println("fail")
+			panic("button requires a -command or -clear action")
 		}
-	} else if clearAll != nil {
-		err = c.Call("GoRPC.UnbindAll", nil, nil)
+	} else if *clearAll {
+		err = c.Call("GoRPC.UnbindAll", struct{}{}, nil)
 	}
 
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
 }
