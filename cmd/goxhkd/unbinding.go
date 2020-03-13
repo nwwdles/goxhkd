@@ -57,9 +57,24 @@ func detach(xu *xgbutil.XUtil, evtype int, win xproto.Window, mods uint16,
 
 func ungrab(xu *xgbutil.XUtil, key xgbutil.KeyKey) {
 	xu.Keygrabs[key] -= len(xu.Keybinds[key])
-	delete(xu.Keybinds, key)
 
 	if xu.Keygrabs[key] == 0 {
-		keybind.Ungrab(xu, key.Win, key.Mod, key.Code)
+		delete(xu.Keybinds, key)
+
+		// check if the other event type is used and ungrab key if it isn't
+		var otherEvType int
+
+		if key.Evtype == xevent.KeyPress {
+			otherEvType = xevent.KeyRelease
+		} else {
+			otherEvType = xevent.KeyPress
+		}
+
+		otherKey := key
+		otherKey.Evtype = otherEvType
+
+		if xu.Keygrabs[otherKey] == 0 {
+			keybind.Ungrab(xu, key.Win, key.Mod, key.Code)
+		}
 	}
 }
