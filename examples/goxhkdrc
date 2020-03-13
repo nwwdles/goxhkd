@@ -9,21 +9,16 @@ bind() {
     goxhkc -button "$btn" -command "$cmd" "$@"
 }
 
-unbind() {
-    btn=$1
-    shift
-    goxhkc -button "$btn" -clear "$@"
-}
+unbind() { goxhkc -button "$1" -clear; }
 
 goxhkc -clearall
 
 bind 'Mod4-v' 'notify-send "Hey"'
 bind 'Mod4-v' 'notify-send "Also hey on release"' -onrelease
 unbind 'Mod4-v'
-unbind 'Mod4-v' -onrelease
 
-bind 'Mod4-v' 'notify-send "Hey 123"'
-bind 'Mod4-v' 'notify-send "Also Hey 123"' -onrelease
+bind 'Mod4-v' 'notify-send "Hey (actually)"'
+bind 'Mod4-v' 'notify-send "Also Hey on release (actually)"' -onrelease
 
 bind 'Mod4-shift-v' 'notify-send "Hello"'
 bind 'Mod4-shift-v' 'notify-send "Also hello on release"' -onrelease
