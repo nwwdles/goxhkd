@@ -27,10 +27,10 @@ func unbind(xu *xgbutil.XUtil, btn string, onRelease bool) error {
 	code := codes[0]
 
 	switch {
-	case onRelease:
-		detach(xu, xevent.KeyRelease, xu.RootWin(), mod, code)
 	case !onRelease:
 		detach(xu, xevent.KeyPress, xu.RootWin(), mod, code)
+	case onRelease:
+		detach(xu, xevent.KeyRelease, xu.RootWin(), mod, code)
 	}
 
 	return nil

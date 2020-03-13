@@ -46,10 +46,10 @@ func keyIsPressed(x *xgbutil.XUtil, keycode xproto.Keycode) bool {
 
 func bindCommand(x *xgbutil.XUtil, btn, cmd string, runOnRelease, repeating bool) error {
 	if repeating {
-		return bindCommandRepeating(x, btn, cmd, !runOnRelease) // TODO runOnRelease
+		return bindCommandRepeating(x, btn, cmd, runOnRelease) // TODO runOnRelease
 	}
 
-	return bindCommandNonrepeating(x, btn, cmd, !runOnRelease)
+	return bindCommandNonrepeating(x, btn, cmd, runOnRelease)
 }
 
 func logErr(err error) {
@@ -58,12 +58,12 @@ func logErr(err error) {
 	}
 }
 
-func bindCommandRepeating(x *xgbutil.XUtil, btn, cmd string, runOnPress bool) error {
+func bindCommandRepeating(x *xgbutil.XUtil, btn, cmd string, runOnRelease bool) error {
 	var err error
 
 	runCmd := makeCmdRunner(cmd)
 
-	if runOnPress {
+	if !runOnRelease {
 		err = keybind.KeyPressFun(func(x *xgbutil.XUtil, e xevent.KeyPressEvent) {
 			logErr(runCmd())
 		}).Connect(x, x.RootWin(), btn, true)
@@ -76,7 +76,7 @@ func bindCommandRepeating(x *xgbutil.XUtil, btn, cmd string, runOnPress bool) er
 	return err
 }
 
-func bindCommandNonrepeating(x *xgbutil.XUtil, btn, cmd string, runOnPress bool) error {
+func bindCommandNonrepeating(x *xgbutil.XUtil, btn, cmd string, runOnRelease bool) error {
 	runCmd := makeCmdRunner(cmd)
 
 	var (
@@ -97,7 +97,7 @@ func bindCommandNonrepeating(x *xgbutil.XUtil, btn, cmd string, runOnPress bool)
 
 			// keyIsPressed is used to detect artificial events in cases when
 			// the command is bound to key release.
-			if !runOnPress && keyIsPressed(x, e.GetKeycode()) {
+			if runOnRelease && keyIsPressed(x, e.GetKeycode()) {
 				return
 			}
 
@@ -105,12 +105,12 @@ func bindCommandNonrepeating(x *xgbutil.XUtil, btn, cmd string, runOnPress bool)
 		}
 	}
 
-	if runOnPress {
-		pressFun = executor
-		releaseFun = timer
-	} else {
+	if runOnRelease {
 		pressFun = timer
 		releaseFun = executor
+	} else {
+		pressFun = executor
+		releaseFun = timer
 	}
 
 	err := keybind.KeyPressFun(func(x *xgbutil.XUtil, e xevent.KeyPressEvent) {
