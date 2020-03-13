@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -15,6 +17,10 @@ func tryExecRcPath(filepath string) error {
 
 	err := cmd.Run()
 	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			log.Println(err)
+		}
+
 		return err
 	}
 
