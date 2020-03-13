@@ -54,6 +54,7 @@ func keyIsPressed(x *xgbutil.XUtil, keycode xproto.Keycode) bool {
 
 func bindCommand(x *xgbutil.XUtil, btn, cmd string, runOnRelease, repeating, sh bool) error {
 	runner := makeCmdRunner(cmd, sh)
+
 	if repeating {
 		return bindCommandRepeating(x, btn, runOnRelease, runner)
 	}
