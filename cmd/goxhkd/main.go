@@ -19,14 +19,12 @@ type RPCAdapter struct {
 	X *xgbutil.XUtil
 }
 
-func (r *RPCAdapter) BindCommand(binding comm.Binding, result *bool) error {
-	bindCommand(r.X, binding.Btn, binding.Cmd, binding.RunOnPress, binding.Repeating)
-	return nil
+func (r *RPCAdapter) BindCommand(binding comm.Binding, _ *bool) error {
+	return bindCommand(r.X, binding.Btn, binding.Cmd, binding.RunOnPress, binding.Repeating)
 }
 
-func (r *RPCAdapter) ClearAll(*bool, *bool) error {
-	unbindAll(r.X)
-	return nil
+func (r *RPCAdapter) UnbindAll(_, _ *bool) error {
+	return unbindAll(r.X)
 }
 
 func ListenAndServe() error {

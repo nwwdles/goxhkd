@@ -45,39 +45,32 @@ func keyIsPressed(X *xgbutil.XUtil, keycode xproto.Keycode) bool {
 	return reply.Keys[keycode>>3]&(0x1<<(keycode%8)) != 0
 }
 
-func bindCommand(X *xgbutil.XUtil, btn, cmd string, runOnPress, repeating bool) {
+func bindCommand(X *xgbutil.XUtil, btn, cmd string, runOnPress, repeating bool) error {
 	if repeating {
-		bindCommandRepeating(X, btn, cmd, runOnPress)
-	} else {
-		bindCommandNonrepeating(X, btn, cmd, runOnPress)
+		return bindCommandRepeating(X, btn, cmd, runOnPress)
 	}
+	return bindCommandNonrepeating(X, btn, cmd, runOnPress)
 }
 
 func bindCommandRepeating(X *xgbutil.XUtil, btn, cmd string, runOnPress bool) error {
+	var err error
+
 	runCmd := makeCmdRunner(cmd)
 
-	var keyFun xevent.KeyPressFun
 	if runOnPress {
-		keyFun = keybind.KeyPressFun(
-			func(X *xgbutil.XUtil, e xevent.KeyPressEvent) {
-				runCmd()
-			})
+		err = keybind.KeyPressFun(func(X *xgbutil.XUtil, e xevent.KeyPressEvent) {
+			runCmd()
+		}).Connect(X, X.RootWin(), btn, true)
 	} else {
-		keyFun = keybind.KeyReleaseFun(
-			func(X *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
-				runCmd()
-			})
-	}
-
-	err := keyFun.Connect(X, X.RootWin(), btn, true)
-	if err != nil {
-		log.Fatal(err)
+		err = keybind.KeyReleaseFun(func(X *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
+			runCmd()
+		}).Connect(X, X.RootWin(), btn, true)
 	}
 
 	return err
 }
 
-func bindCommandNonrepeating(X *xgbutil.XUtil, btn, cmd string, runOnPress bool) {
+func bindCommandNonrepeating(X *xgbutil.XUtil, btn, cmd string, runOnPress bool) error {
 	runCmd := makeCmdRunner(cmd)
 
 	var (
@@ -115,17 +108,17 @@ func bindCommandNonrepeating(X *xgbutil.XUtil, btn, cmd string, runOnPress bool)
 		pressFun(KeyPressEvent(e))
 	}).Connect(X, X.RootWin(), btn, true)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	err = keybind.KeyReleaseFun(func(X *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
 		releaseFun(KeyReleaseEvent(e))
 	}).Connect(X, X.RootWin(), btn, true)
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	return err
 }
 
-func unbindAll(X *xgbutil.XUtil) {
+func unbindAll(X *xgbutil.XUtil) error {
 	keybind.Detach(X, X.RootWin())
+	return nil
 }

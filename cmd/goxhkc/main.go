@@ -1,12 +1,21 @@
 package main
 
 import (
+	"flag"
 	"net/rpc"
 
 	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/comm"
 )
 
 func main() {
+	btn := flag.String("button", "", "specify a button")
+	cmd := flag.String("command", "", "set command for the button")
+	// clear := flag.Bool("clear", false, "clear the button")
+	clearAll := flag.Bool("clearall", false, "clear all bindings")
+	flag.Parse()
+
+	// fmt.Println(*clearAll, *btn, *cmd, *clear)
+
 	conn := comm.Connection{
 		Network: "unix",
 		Address: comm.SocketAddr,
@@ -18,10 +27,14 @@ func main() {
 	}
 	defer c.Close()
 
-	err = c.Call("RPCAdapter.BindCommand", comm.Binding{
-		Cmd: "notify-send hello",
-		Btn: "Mod4-v",
-	}, nil)
+	if btn != nil && cmd != nil {
+		err = c.Call("RPCAdapter.BindCommand", comm.Binding{
+			Cmd: *cmd,
+			Btn: *btn,
+		}, nil)
+	} else if clearAll != nil {
+		err = c.Call("RPCAdapter.UnbindAll", nil, nil)
+	}
 
 	if err != nil {
 		panic(err)
