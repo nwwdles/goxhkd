@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#
+# Example of goxhkdrc with sets of bindings.
+
+bind() { btn=$1 cmd=$2 && shift 2 && goxhkc -button "$btn" -command "$cmd" "$@"; }
+unbind() { goxhkc -button "$1" -clear; }
+
+#
+# Define sets of bindings
+#
+
+set::default() {
+    bind 'Mod4-v' "notify-send aaa" -sh
+    bind 'Mod4-v' "notify-send 'also aaa'" -onrelease -sh
+    bind 'Mod4-v' "$0 test" -onrelease -sh
+}
+
+set::test() {
+    noty() {
+        notify-send "$@"
+    }
+
+    bind 'Mod4-v' "$(declare -f noty); noty 'hahaha'; $0" -onrelease -sh
+}
+
+main() {
+    case "$1" in
+    test)
+        goxhkc -clearall
+        set::test
+        ;;
+    *)
+        goxhkc -clearall
+        set::default
+        ;;
+    esac
+}
+
+main "$@"

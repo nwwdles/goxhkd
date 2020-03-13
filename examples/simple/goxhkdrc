@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# A simple goxhkdrc example.
+
+bind() { btn=$1 cmd=$2 && shift 2 && goxhkc -button "$btn" -command "$cmd" "$@"; }
+unbind() { goxhkc -button "$1" -clear; }
+
+goxhkc -clearall
+
+bind 'Mod4-v' "notify-send aaa" -sh
+bind 'Mod4-v' "notify-send 'also aaa'" -onrelease -sh
