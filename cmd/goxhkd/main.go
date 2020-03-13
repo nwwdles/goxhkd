@@ -15,6 +15,7 @@ import (
 )
 
 const AppName = "goxhkd"
+const InitialRcRunDelay = 500 * time.Millisecond
 
 func main() {
 	X, err := xgbutil.NewConn()
@@ -25,11 +26,8 @@ func main() {
 	keybind.Initialize(X)
 
 	ra := GoRPC{
-		X: X,
-		Conn: &shared.Connection{
-			Network: "unix",
-			Address: shared.DefaultSocketAddr,
-		},
+		X:    X,
+		Conn: shared.DefaultSocketConnection(),
 	}
 
 	serverErrors := make(chan error, 1)
@@ -45,7 +43,7 @@ func main() {
 
 	// run RC file
 	go func() {
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(InitialRcRunDelay)
 
 		if err := runRc(); err != nil {
 			fmt.Println("RC file couldn't be executed:", err)

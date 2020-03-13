@@ -44,12 +44,12 @@ func keyIsPressed(x *xgbutil.XUtil, keycode xproto.Keycode) bool {
 	return reply.Keys[keycode>>3]&(0x1<<(keycode%8)) != 0
 }
 
-func bindCommand(x *xgbutil.XUtil, btn, cmd string, runOnPress, repeating bool) error {
+func bindCommand(x *xgbutil.XUtil, btn, cmd string, runOnRelease, repeating bool) error {
 	if repeating {
-		return bindCommandRepeating(x, btn, cmd, runOnPress)
+		return bindCommandRepeating(x, btn, cmd, !runOnRelease) // TODO runOnRelease
 	}
 
-	return bindCommandNonrepeating(x, btn, cmd, runOnPress)
+	return bindCommandNonrepeating(x, btn, cmd, !runOnRelease)
 }
 
 func logErr(err error) {
@@ -125,9 +125,4 @@ func bindCommandNonrepeating(x *xgbutil.XUtil, btn, cmd string, runOnPress bool)
 	}).Connect(x, x.RootWin(), btn, true)
 
 	return err
-}
-
-func unbindAll(x *xgbutil.XUtil) error {
-	keybind.Detach(x, x.RootWin())
-	return nil
 }

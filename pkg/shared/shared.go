@@ -7,9 +7,16 @@ type Connection struct {
 	Address string
 }
 
+func DefaultSocketConnection() *Connection {
+	return &Connection{
+		Network: "unix",
+		Address: DefaultSocketAddr,
+	}
+}
+
 type Binding struct {
-	Cmd        string
-	Btn        string
-	RunOnPress bool
-	Repeating  bool
+	Cmd          string
+	Btn          string
+	RunOnRelease bool
+	Repeating    bool
 }

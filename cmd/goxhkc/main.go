@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/rpc"
 
 	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/shared"
@@ -10,14 +11,13 @@ import (
 func main() {
 	btn := flag.String("button", "", "specify a button")
 	cmd := flag.String("command", "", "set command for the button")
-	// clear := flag.Bool("clear", false, "clear the button")
+	onRelease := flag.Bool("onrelease", false, "run command on button release")
+	repeating := flag.Bool("repeat", false, "repeatedly run command while the button is pressed")
+	clear := flag.Bool("clear", false, "clear the button")
 	clearAll := flag.Bool("clearall", false, "clear all bindings")
 	flag.Parse()
 
-	conn := shared.Connection{
-		Network: "unix",
-		Address: shared.DefaultSocketAddr,
-	}
+	conn := shared.DefaultSocketConnection()
 
 	c, err := rpc.Dial(conn.Network, conn.Address)
 	if err != nil {
@@ -25,11 +25,25 @@ func main() {
 	}
 	defer c.Close()
 
-	if btn != nil && cmd != nil {
-		err = c.Call("GoRPC.BindCommand", shared.Binding{
-			Cmd: *cmd,
-			Btn: *btn,
-		}, nil)
+	if btn != nil {
+		switch {
+		case *clear:
+			fmt.Println("clear")
+			err = c.Call("GoRPC.Unbind", shared.Binding{
+				Btn:          *btn,
+				RunOnRelease: *onRelease,
+			}, nil)
+		case *cmd != "":
+			fmt.Println("cmd")
+			err = c.Call("GoRPC.BindCommand", shared.Binding{
+				Cmd:          *cmd,
+				Btn:          *btn,
+				RunOnRelease: *onRelease,
+				Repeating:    *repeating,
+			}, nil)
+		default:
+			fmt.Println("fail")
+		}
 	} else if clearAll != nil {
 		err = c.Call("GoRPC.UnbindAll", nil, nil)
 	}

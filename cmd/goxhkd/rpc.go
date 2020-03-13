@@ -10,6 +10,7 @@ import (
 	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/shared"
 )
 
+// GoRPC implements RPC adapter
 type GoRPC struct {
 	X    *xgbutil.XUtil
 	Conn *shared.Connection
@@ -46,9 +47,13 @@ func (r *GoRPC) listenAndServe() error {
 }
 
 func (r *GoRPC) BindCommand(b shared.Binding, _ *bool) error {
-	return bindCommand(r.X, b.Btn, b.Cmd, b.RunOnPress, b.Repeating)
+	return bindCommand(r.X, b.Btn, b.Cmd, b.RunOnRelease, b.Repeating)
 }
 
 func (r *GoRPC) UnbindAll(_, _ *bool) error {
 	return unbindAll(r.X)
+}
+
+func (r *GoRPC) Unbind(b shared.Binding, _ *bool) error {
+	return unbind(r.X, b.Btn, b.RunOnRelease)
 }
