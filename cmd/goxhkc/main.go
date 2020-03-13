@@ -2,12 +2,29 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/rpc"
+	"os"
 
 	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/shared"
 )
 
+const GenericError = 1
+
+func exit() {
+	if e := recover(); e != nil {
+		switch e := e.(type) {
+		case int:
+			os.Exit(e)
+		default:
+			panic(e)
+		}
+	}
+}
+
 func main() {
+	defer exit()
+
 	conn := shared.DefaultSocketConnection()
 
 	btn := flag.String("button", "", "specify a button")
@@ -50,6 +67,7 @@ func main() {
 	}
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Fprintln(os.Stderr, err.Error())
+		panic(GenericError)
 	}
 }
