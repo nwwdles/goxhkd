@@ -71,15 +71,13 @@ func logErr(err error) {
 func bindCommandRepeating(x *xgbutil.XUtil, btn string, runOnRelease bool, runner func() error) error {
 	var err error
 
-	runCmd := runner
-
 	if !runOnRelease {
 		err = keybind.KeyPressFun(func(x *xgbutil.XUtil, e xevent.KeyPressEvent) {
-			logErr(runCmd())
+			logErr(runner())
 		}).Connect(x, x.RootWin(), btn, true)
 	} else {
 		err = keybind.KeyReleaseFun(func(x *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
-			logErr(runCmd())
+			logErr(runner())
 		}).Connect(x, x.RootWin(), btn, true)
 	}
 
@@ -87,8 +85,6 @@ func bindCommandRepeating(x *xgbutil.XUtil, btn string, runOnRelease bool, runne
 }
 
 func bindCommandNonrepeating(x *xgbutil.XUtil, btn string, runOnRelease bool, runner func() error) error {
-	runCmd := runner
-
 	var (
 		pressFun,
 		releaseFun func(e timedKeyEvent)
@@ -98,20 +94,20 @@ func bindCommandNonrepeating(x *xgbutil.XUtil, btn string, runOnRelease bool, ru
 	// lastEventTime is used to filter out artificial events spawned by key
 	// autorepeating. Such events come in pressEvent-releaseEvent pairs that
 	// have the same timestamp
-	timer := func(e timedKeyEvent) { lastEventTime = e.GetTime() }
+	timer := func(e timedKeyEvent) { lastEventTime = e.Timestamp() }
 
 	executor := func(e timedKeyEvent) {
-		t := e.GetTime()
+		t := e.Timestamp()
 		if t != lastEventTime {
 			lastEventTime = t
 
 			// keyIsPressed is used to detect artificial events in cases when
 			// the command is bound to key release.
-			if runOnRelease && keyIsPressed(x, e.GetKeycode()) {
+			if runOnRelease && keyIsPressed(x, e.Keycode()) {
 				return
 			}
 
-			logErr(runCmd())
+			logErr(runner())
 		}
 	}
 
