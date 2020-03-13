@@ -6,26 +6,26 @@ import (
 )
 
 type timedKeyEvent interface {
-	GetTime() xproto.Timestamp
-	GetKeycode() xproto.Keycode
+	Timestamp() xproto.Timestamp
+	Keycode() xproto.Keycode
 }
 
 type KeyPressEvent xevent.KeyPressEvent
 
-func (e KeyPressEvent) GetKeycode() xproto.Keycode {
+func (e KeyPressEvent) Keycode() xproto.Keycode {
 	return e.KeyPressEvent.Detail
 }
 
-func (e KeyPressEvent) GetTime() xproto.Timestamp {
+func (e KeyPressEvent) Timestamp() xproto.Timestamp {
 	return e.Time
 }
 
 type KeyReleaseEvent xevent.KeyReleaseEvent
 
-func (e KeyReleaseEvent) GetKeycode() xproto.Keycode {
+func (e KeyReleaseEvent) Keycode() xproto.Keycode {
 	return e.KeyReleaseEvent.Detail
 }
 
-func (e KeyReleaseEvent) GetTime() xproto.Timestamp {
+func (e KeyReleaseEvent) Timestamp() xproto.Timestamp {
 	return e.Time
 }
