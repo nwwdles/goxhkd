@@ -29,6 +29,7 @@ func main() {
 
 	btn := flag.String("button", "", "specify a button")
 	cmd := flag.String("command", "", "set command for the button")
+	sh := flag.Bool("sh", false, "run command with 'sh -c ...'")
 	onRelease := flag.Bool("onrelease", false, "run command on button release")
 	repeating := flag.Bool("repeat", false, "repeatedly run command while the button is pressed")
 	clear := flag.Bool("clear", false, "clear the button")
@@ -58,6 +59,7 @@ func main() {
 				Btn:          *btn,
 				RunOnRelease: *onRelease,
 				Repeating:    *repeating,
+				Sh:           *sh,
 			}, nil)
 		default:
 			panic("button requires a -command or -clear action")

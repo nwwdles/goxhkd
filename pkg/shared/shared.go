@@ -19,4 +19,5 @@ type Binding struct {
 	Btn          string
 	RunOnRelease bool
 	Repeating    bool
+	Sh           bool
 }

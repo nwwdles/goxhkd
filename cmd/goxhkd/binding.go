@@ -12,7 +12,11 @@ import (
 	"github.com/google/shlex"
 )
 
-func makeCommand(cmd string) (*exec.Cmd, error) {
+func makeCommand(cmd string, sh bool) (*exec.Cmd, error) {
+	if sh {
+		return exec.Command("sh", "-c", cmd), nil
+	}
+
 	tokens, err := shlex.Split(cmd)
 	if err != nil {
 		return nil, err
@@ -21,11 +25,11 @@ func makeCommand(cmd string) (*exec.Cmd, error) {
 	return exec.Command(tokens[0], tokens[1:]...), nil
 }
 
-func makeCmdRunner(cmd string) func() error {
+func makeCmdRunner(cmd string, sh bool) func() error {
 	return func() error {
-		log.Println("Key press! Running:", cmd)
+		log.Println("Running:", cmd)
 
-		cmd, err := makeCommand(cmd)
+		cmd, err := makeCommand(cmd, sh)
 		if err != nil {
 			return err
 		}
@@ -48,12 +52,13 @@ func keyIsPressed(x *xgbutil.XUtil, keycode xproto.Keycode) bool {
 	return reply.Keys[keycode>>3]&(0x1<<(keycode%8)) != 0
 }
 
-func bindCommand(x *xgbutil.XUtil, btn, cmd string, runOnRelease, repeating bool) error {
+func bindCommand(x *xgbutil.XUtil, btn, cmd string, runOnRelease, repeating, sh bool) error {
+	runner := makeCmdRunner(cmd, sh)
 	if repeating {
-		return bindCommandRepeating(x, btn, cmd, runOnRelease)
+		return bindCommandRepeating(x, btn, runOnRelease, runner)
 	}
 
-	return bindCommandNonrepeating(x, btn, cmd, runOnRelease)
+	return bindCommandNonrepeating(x, btn, runOnRelease, runner)
 }
 
 func logErr(err error) {
@@ -62,10 +67,10 @@ func logErr(err error) {
 	}
 }
 
-func bindCommandRepeating(x *xgbutil.XUtil, btn, cmd string, runOnRelease bool) error {
+func bindCommandRepeating(x *xgbutil.XUtil, btn string, runOnRelease bool, runner func() error) error {
 	var err error
 
-	runCmd := makeCmdRunner(cmd)
+	runCmd := runner
 
 	if !runOnRelease {
 		err = keybind.KeyPressFun(func(x *xgbutil.XUtil, e xevent.KeyPressEvent) {
@@ -80,8 +85,8 @@ func bindCommandRepeating(x *xgbutil.XUtil, btn, cmd string, runOnRelease bool) 
 	return err
 }
 
-func bindCommandNonrepeating(x *xgbutil.XUtil, btn, cmd string, runOnRelease bool) error {
-	runCmd := makeCmdRunner(cmd)
+func bindCommandNonrepeating(x *xgbutil.XUtil, btn string, runOnRelease bool, runner func() error) error {
+	runCmd := runner
 
 	var (
 		pressFun,

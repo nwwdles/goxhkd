@@ -47,7 +47,7 @@ func (r *GoRPC) listenAndServe() error {
 }
 
 func (r *GoRPC) BindCommand(b shared.Binding, _ *struct{}) error {
-	return bindCommand(r.X, b.Btn, b.Cmd, b.RunOnRelease, b.Repeating)
+	return bindCommand(r.X, b.Btn, b.Cmd, b.RunOnRelease, b.Repeating, b.Sh)
 }
 
 func (r *GoRPC) UnbindAll(_ struct{}, _ *struct{}) error {
