@@ -55,5 +55,13 @@ func (r *GoRPC) UnbindAll(_ struct{}, _ *struct{}) error {
 }
 
 func (r *GoRPC) Unbind(b shared.Binding, _ *struct{}) error {
+	// Because workaround for xorg key repeating uses both release and press
+	// functions, we can't easily unbind just the release or just the press
+	// event, so we unbind both.
+	err := unbind(r.X, b.Btn, !b.RunOnRelease)
+	if err != nil {
+		_ = err // skip
+	}
+
 	return unbind(r.X, b.Btn, b.RunOnRelease)
 }
