@@ -14,7 +14,11 @@ import (
 
 func makeCommand(cmd string) (*exec.Cmd, error) {
 	tokens, err := shlex.Split(cmd)
-	return exec.Command(tokens[0], tokens[1:]...), err
+	if err != nil {
+		return nil, err
+	}
+
+	return exec.Command(tokens[0], tokens[1:]...), nil
 }
 
 func makeCmdRunner(cmd string) func() error {
