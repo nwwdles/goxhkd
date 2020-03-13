@@ -33,8 +33,8 @@ func makeCmdRunner(cmd string) func() {
 	}
 }
 
-func keyIsPressed(X *xgbutil.XUtil, keycode xproto.Keycode) bool {
-	ck := xproto.QueryKeymap(X.Conn())
+func keyIsPressed(x *xgbutil.XUtil, keycode xproto.Keycode) bool {
+	ck := xproto.QueryKeymap(x.Conn())
 	reply, err := ck.Reply()
 
 	if err != nil {
@@ -45,37 +45,39 @@ func keyIsPressed(X *xgbutil.XUtil, keycode xproto.Keycode) bool {
 	return reply.Keys[keycode>>3]&(0x1<<(keycode%8)) != 0
 }
 
-func bindCommand(X *xgbutil.XUtil, btn, cmd string, runOnPress, repeating bool) error {
+func bindCommand(x *xgbutil.XUtil, btn, cmd string, runOnPress, repeating bool) error {
 	if repeating {
-		return bindCommandRepeating(X, btn, cmd, runOnPress)
+		return bindCommandRepeating(x, btn, cmd, runOnPress)
 	}
-	return bindCommandNonrepeating(X, btn, cmd, runOnPress)
+
+	return bindCommandNonrepeating(x, btn, cmd, runOnPress)
 }
 
-func bindCommandRepeating(X *xgbutil.XUtil, btn, cmd string, runOnPress bool) error {
+func bindCommandRepeating(x *xgbutil.XUtil, btn, cmd string, runOnPress bool) error {
 	var err error
 
 	runCmd := makeCmdRunner(cmd)
 
 	if runOnPress {
-		err = keybind.KeyPressFun(func(X *xgbutil.XUtil, e xevent.KeyPressEvent) {
+		err = keybind.KeyPressFun(func(x *xgbutil.XUtil, e xevent.KeyPressEvent) {
 			runCmd()
-		}).Connect(X, X.RootWin(), btn, true)
+		}).Connect(x, x.RootWin(), btn, true)
 	} else {
-		err = keybind.KeyReleaseFun(func(X *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
+		err = keybind.KeyReleaseFun(func(x *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
 			runCmd()
-		}).Connect(X, X.RootWin(), btn, true)
+		}).Connect(x, x.RootWin(), btn, true)
 	}
 
 	return err
 }
 
-func bindCommandNonrepeating(X *xgbutil.XUtil, btn, cmd string, runOnPress bool) error {
+func bindCommandNonrepeating(x *xgbutil.XUtil, btn, cmd string, runOnPress bool) error {
 	runCmd := makeCmdRunner(cmd)
 
 	var (
-		pressFun, releaseFun func(e timedKeyEvent)
-		lastEventTime        xproto.Timestamp // this variable is captured
+		pressFun,
+		releaseFun func(e timedKeyEvent)
+		lastEventTime xproto.Timestamp // this variable is captured
 	)
 
 	// lastEventTime is used to filter out artificial events spawned by key
@@ -88,7 +90,9 @@ func bindCommandNonrepeating(X *xgbutil.XUtil, btn, cmd string, runOnPress bool)
 		if t != lastEventTime {
 			lastEventTime = t
 
-			if !runOnPress && keyIsPressed(X, e.GetKeycode()) {
+			// keyIsPressed is used to detect artificial events in cases when
+			// the command is bound to key release.
+			if !runOnPress && keyIsPressed(x, e.GetKeycode()) {
 				return
 			}
 
@@ -104,21 +108,21 @@ func bindCommandNonrepeating(X *xgbutil.XUtil, btn, cmd string, runOnPress bool)
 		releaseFun = executor
 	}
 
-	err := keybind.KeyPressFun(func(X *xgbutil.XUtil, e xevent.KeyPressEvent) {
+	err := keybind.KeyPressFun(func(x *xgbutil.XUtil, e xevent.KeyPressEvent) {
 		pressFun(KeyPressEvent(e))
-	}).Connect(X, X.RootWin(), btn, true)
+	}).Connect(x, x.RootWin(), btn, true)
 	if err != nil {
 		return err
 	}
 
-	err = keybind.KeyReleaseFun(func(X *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
+	err = keybind.KeyReleaseFun(func(x *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
 		releaseFun(KeyReleaseEvent(e))
-	}).Connect(X, X.RootWin(), btn, true)
+	}).Connect(x, x.RootWin(), btn, true)
 
 	return err
 }
 
-func unbindAll(X *xgbutil.XUtil) error {
-	keybind.Detach(X, X.RootWin())
+func unbindAll(x *xgbutil.XUtil) error {
+	keybind.Detach(x, x.RootWin())
 	return nil
 }

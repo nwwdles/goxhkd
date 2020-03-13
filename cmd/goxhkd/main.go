@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
-	"net"
-	"net/rpc"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/keybind"
@@ -15,45 +14,7 @@ import (
 	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/comm"
 )
 
-type RPCAdapter struct {
-	X *xgbutil.XUtil
-}
-
-func (r *RPCAdapter) BindCommand(binding comm.Binding, _ *bool) error {
-	return bindCommand(r.X, binding.Btn, binding.Cmd, binding.RunOnPress, binding.Repeating)
-}
-
-func (r *RPCAdapter) UnbindAll(_, _ *bool) error {
-	return unbindAll(r.X)
-}
-
-func ListenAndServe() error {
-	c := comm.Connection{
-		Network: "unix",
-		Address: comm.SocketAddr,
-	}
-
-	if c.Network == "unix" {
-		if err := os.RemoveAll(c.Address); err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	ln, err := net.Listen(c.Network, c.Address)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	for {
-		c, err := ln.Accept()
-		if err != nil {
-			continue
-		}
-
-		go rpc.ServeConn(c)
-	}
-}
+const AppName = "goxhkd"
 
 func main() {
 	X, err := xgbutil.NewConn()
@@ -61,29 +22,39 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ra := &RPCAdapter{
-		X: X,
-	}
-
-	err = rpc.Register(ra)
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-
 	keybind.Initialize(X)
+
+	ra := RPCAdapter{
+		X: X,
+		Conn: &comm.Connection{
+			Network: "unix",
+			Address: comm.SocketAddr,
+		},
+	}
 
 	// bindCommand(X, "Mod4-v", `notify-send 'hello world!'`, false, false)
 	// bindCommand(X, "Mod4-shift-v", `notify-send 'hello world 2!'`, false, true)
 
 	serverErrors := make(chan error, 1)
 
+	go func() { serverErrors <- ra.listenAndServe() }()
+
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() { serverErrors <- ListenAndServe() }()
 	go func() { xevent.Main(X) }()
 
-	log.Println("Program initialized. Start pressing keys!")
+	log.Println(AppName, "started. Start pressing keys!")
+
+	// run RC file
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+
+		if err := runRc(); err != nil {
+			fmt.Println("RC file couldn't be executed:", err)
+		}
+	}()
+
 	select {
 	case err := <-serverErrors:
 		if err != nil {
