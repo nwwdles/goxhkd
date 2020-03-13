@@ -7,12 +7,12 @@ import (
 	"os"
 
 	"github.com/BurntSushi/xgbutil"
-	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/comm"
+	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/shared"
 )
 
 type GoRPC struct {
 	X    *xgbutil.XUtil
-	Conn *comm.Connection
+	Conn *shared.Connection
 }
 
 func (r *GoRPC) listenAndServe() error {
@@ -22,7 +22,8 @@ func (r *GoRPC) listenAndServe() error {
 	}
 
 	if r.Conn.Network == "unix" {
-		if err = os.RemoveAll(r.Conn.Address); err != nil {
+		err = os.RemoveAll(r.Conn.Address)
+		if err != nil {
 			return err
 		}
 	}
@@ -44,8 +45,8 @@ func (r *GoRPC) listenAndServe() error {
 	}
 }
 
-func (r *GoRPC) BindCommand(binding comm.Binding, _ *bool) error {
-	return bindCommand(r.X, binding.Btn, binding.Cmd, binding.RunOnPress, binding.Repeating)
+func (r *GoRPC) BindCommand(b shared.Binding, _ *bool) error {
+	return bindCommand(r.X, b.Btn, b.Cmd, b.RunOnPress, b.Repeating)
 }
 
 func (r *GoRPC) UnbindAll(_, _ *bool) error {

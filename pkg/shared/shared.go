@@ -1,4 +1,4 @@
-package comm
+package shared
 
 const DefaultSocketAddr = "/tmp/goxhkd.sock"
 

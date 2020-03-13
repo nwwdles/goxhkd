@@ -11,7 +11,7 @@ import (
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/keybind"
 	"github.com/BurntSushi/xgbutil/xevent"
-	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/comm"
+	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/shared"
 )
 
 const AppName = "goxhkd"
@@ -26,9 +26,9 @@ func main() {
 
 	ra := GoRPC{
 		X: X,
-		Conn: &comm.Connection{
+		Conn: &shared.Connection{
 			Network: "unix",
-			Address: comm.DefaultSocketAddr,
+			Address: shared.DefaultSocketAddr,
 		},
 	}
 
