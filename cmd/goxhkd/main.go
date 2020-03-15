@@ -12,7 +12,7 @@ import (
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/keybind"
 	"github.com/BurntSushi/xgbutil/xevent"
-	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/shared"
+	"gitlab.com/cupnoodles14/goxhkd/pkg/shared"
 )
 
 const AppName = "goxhkd"

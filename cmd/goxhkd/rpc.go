@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/BurntSushi/xgbutil"
-	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/shared"
+	"gitlab.com/cupnoodles14/goxhkd/pkg/shared"
 )
 
 // GoRPC implements RPC adapter

@@ -6,7 +6,7 @@ import (
 	"net/rpc"
 	"os"
 
-	"github.com/cupnoodles14/scratchpad/go/goxhkd/pkg/shared"
+	"gitlab.com/cupnoodles14/goxhkd/pkg/shared"
 )
 
 const GenericError = 1
