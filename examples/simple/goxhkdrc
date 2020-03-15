@@ -2,10 +2,14 @@
 #
 # A simple goxhkdrc example.
 
-bind() { btn=$1 cmd=$2 && shift 2 && goxhkc -button "$btn" -command "$cmd" "$@"; }
-unbind() { goxhkc -button "$1" -clear; }
-
 goxhkc -clearall
 
-bind 'Mod4-v' "notify-send aaa" -sh
-bind 'Mod4-v' "notify-send 'also aaa'" -onrelease -sh
+goxhkc -button 'Mod4-v' -command "notify-send aaa" -sh
+goxhkc -button 'Mod4-v' -command "notify-send 'also aaa'" -onrelease -sh
+
+goxhkc -button "Mod4-v" -clear
+
+# if the command is a simple call to one program, '-sh' isn't necessary
+goxhkc -button 'Mod4-v' -command "notify-send 'Actually, this'"
+# otherwise it's required
+goxhkc -button 'Mod4-v' -command "notify-send 'And this'; sleep 3; notify-send slep" -onrelease -sh
