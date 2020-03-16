@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"net/rpc"
@@ -9,22 +10,17 @@ import (
 	"gitlab.com/cupnoodles14/goxhkd/pkg/shared"
 )
 
-const GenericError = 1
+// OS return codes
+const (
+	Success      = 0
+	GenericError = 1
+)
 
-func exit() {
-	if e := recover(); e != nil {
-		switch e := e.(type) {
-		case int:
-			os.Exit(e)
-		default:
-			panic(e)
-		}
-	}
-}
+var (
+	ErrNoAction = errors.New("button requires either -command or -clear action")
+)
 
-func main() {
-	defer exit()
-
+func run() int {
 	conn := shared.DefaultSocketConnection()
 
 	btn := flag.String("button", "", "specify a button")
@@ -42,7 +38,8 @@ func main() {
 
 	c, err := rpc.Dial(conn.Network, conn.Address)
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err.Error())
+		return GenericError
 	}
 	defer c.Close()
 
@@ -62,7 +59,7 @@ func main() {
 				Sh:           *sh,
 			}, nil)
 		default:
-			panic("button requires a -command or -clear action")
+			err = ErrNoAction
 		}
 	} else if *clearAll {
 		err = c.Call("GoRPC.UnbindAll", struct{}{}, nil)
@@ -70,6 +67,12 @@ func main() {
 
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
-		panic(GenericError)
+		return GenericError
 	}
+
+	return Success
+}
+
+func main() {
+	os.Exit(run())
 }
