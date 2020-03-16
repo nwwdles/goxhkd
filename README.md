@@ -2,6 +2,12 @@
 
 A simple X11 hotkey daemon using [xgbutil](https://github.com/BurntSushi/xgbutil).
 
+The config file is a shell script (see `examples/`). It should contain a shebang and be executable. It's executed by the goxhkd daemon on start after a small delay. Next config paths are checked:
+
+- `$XDG_CONFIG_HOME/goxhkd/goxhkdrc` (if `$XDG_CONFIG_HOME` isn't set, it falls back to `$HOME/.config`)
+- `$HOME/.goxhkdrc`
+- `/etc/goxhkd/goxhkdrc`
+
 ## Controller
 
 ```txt
