@@ -31,82 +31,57 @@ import (
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/keybind"
 	"github.com/BurntSushi/xgbutil/xevent"
-	"github.com/google/shlex"
 )
 
-func makeCommand(cmd string, sh bool) (*exec.Cmd, error) {
-	if sh {
-		return exec.Command("sh", "-c", cmd), nil
-	}
-
-	tokens, err := shlex.Split(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	return exec.Command(tokens[0], tokens[1:]...), nil
-}
-
-func makeCmdRunner(cmd string, sh bool) func() error {
-	return func() error {
-		log.Println("Running:", cmd)
-
-		cmd, err := makeCommand(cmd, sh)
-		if err != nil {
-			return err
-		}
-
-		return cmd.Start()
-	}
-}
-
-func keyIsPressed(x *xgbutil.XUtil, keycode xproto.Keycode) bool {
+func keyIsPressed(x *xgbutil.XUtil, keycode xproto.Keycode) (bool, error) {
 	ck := xproto.QueryKeymap(x.Conn())
-	reply, err := ck.Reply()
 
+	reply, err := ck.Reply()
 	if err != nil {
 		err = fmt.Errorf("failed to get key press state: %w", err)
-		log.Printf("%v", err)
 
-		return false
+		return false, err
 	}
 
-	return reply.Keys[keycode>>3]&(0x1<<(keycode%8)) != 0
+	return reply.Keys[keycode>>3]&(0x1<<(keycode%8)) != 0, err
 }
 
-func bindCommand(x *xgbutil.XUtil, btn, cmd string, runOnRelease, repeating, sh bool) error {
-	runner := makeCmdRunner(cmd, sh)
+func bindCommand(x *xgbutil.XUtil, w xproto.Window, btn string, cmd []string, runOnRelease, repeating, sh bool) error {
+	log.Printf("grabbing %s (window: %d): %s", btn, w, cmd)
+	runner := func() error {
+		if sh {
+			cmd = append([]string{"sh", "-c"}, cmd...)
+		}
+
+		log.Println("Running:", cmd)
+
+		return exec.Command(cmd[0], cmd[1:]...).Start() // #nosec
+	}
 
 	if repeating {
-		return bindCommandRepeating(x, btn, runOnRelease, runner)
+		return bindCmdRepeating(x, w, btn, runOnRelease, runner)
 	}
 
-	return bindCommandNonrepeating(x, btn, runOnRelease, runner)
+	return bindCmd(x, w, btn, runOnRelease, runner)
 }
 
-func logErr(err error) {
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-func bindCommandRepeating(x *xgbutil.XUtil, btn string, runOnRelease bool, runner func() error) error {
-	var err error
-
+func bindCmdRepeating(x *xgbutil.XUtil, w xproto.Window, btn string, runOnRelease bool, runCmd func() error) error {
 	if !runOnRelease {
-		err = keybind.KeyPressFun(func(x *xgbutil.XUtil, e xevent.KeyPressEvent) {
-			logErr(runner())
-		}).Connect(x, x.RootWin(), btn, true)
-	} else {
-		err = keybind.KeyReleaseFun(func(x *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
-			logErr(runner())
-		}).Connect(x, x.RootWin(), btn, true)
+		return keybind.KeyPressFun(func(x *xgbutil.XUtil, e xevent.KeyPressEvent) {
+			if err := runCmd(); err != nil {
+				log.Println(err)
+			}
+		}).Connect(x, w, btn, true)
 	}
 
-	return err
+	return keybind.KeyReleaseFun(func(x *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
+		if err := runCmd(); err != nil {
+			log.Println(err)
+		}
+	}).Connect(x, w, btn, true)
 }
 
-func bindCommandNonrepeating(x *xgbutil.XUtil, btn string, runOnRelease bool, runner func() error) error {
+func bindCmd(x *xgbutil.XUtil, w xproto.Window, btn string, runOnRelease bool, runner func() error) error {
 	var (
 		pressFun,
 		releaseFun func(e timedKeyEvent)
@@ -125,11 +100,20 @@ func bindCommandNonrepeating(x *xgbutil.XUtil, btn string, runOnRelease bool, ru
 
 			// keyIsPressed is used to detect artificial events in cases when
 			// the command is bound to key release.
-			if runOnRelease && keyIsPressed(x, e.Keycode()) {
+			p, err := keyIsPressed(x, e.Keycode())
+			if err != nil {
+				log.Print(err)
+
 				return
 			}
 
-			logErr(runner())
+			if runOnRelease && p {
+				return
+			}
+
+			if err = runner(); err != nil {
+				log.Print(err)
+			}
 		}
 	}
 
@@ -143,14 +127,12 @@ func bindCommandNonrepeating(x *xgbutil.XUtil, btn string, runOnRelease bool, ru
 
 	err := keybind.KeyPressFun(func(x *xgbutil.XUtil, e xevent.KeyPressEvent) {
 		pressFun(KeyPressEvent(e))
-	}).Connect(x, x.RootWin(), btn, true)
+	}).Connect(x, w, btn, true)
 	if err != nil {
 		return err
 	}
 
-	err = keybind.KeyReleaseFun(func(x *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
+	return keybind.KeyReleaseFun(func(x *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
 		releaseFun(KeyReleaseEvent(e))
-	}).Connect(x, x.RootWin(), btn, true)
-
-	return err
+	}).Connect(x, w, btn, true)
 }

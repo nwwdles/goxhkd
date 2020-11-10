@@ -23,7 +23,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net"
 	"net/rpc"
 	"os"
@@ -32,14 +32,13 @@ import (
 	"gitlab.com/cupnoodles14/goxhkd/pkg/shared"
 )
 
-// GoRPC implements RPC adapter
-type GoRPC struct {
+type App struct {
 	X    *xgbutil.XUtil
 	Conn *shared.Connection
 }
 
-func (r *GoRPC) listenAndServe() error {
-	err := rpc.Register(r)
+func (r *App) listenAndServe() (err error) {
+	err = rpc.Register(r)
 	if err != nil {
 		return err
 	}
@@ -53,14 +52,13 @@ func (r *GoRPC) listenAndServe() error {
 
 	ln, err := net.Listen(r.Conn.Network, r.Conn.Address)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
 	for {
 		c, err := ln.Accept()
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			continue
 		}
 
@@ -68,21 +66,27 @@ func (r *GoRPC) listenAndServe() error {
 	}
 }
 
-func (r *GoRPC) BindCommand(b shared.Binding, _ *struct{}) error {
-	return bindCommand(r.X, b.Btn, b.Cmd, b.RunOnRelease, b.Repeating, b.Sh)
+func (r *App) BindCommand(b shared.Binding, _ *struct{}) error {
+	w := b.Window
+	if w == 0 {
+		w = r.X.RootWin()
+	}
+
+	return bindCommand(r.X, w, b.Btn, b.Cmd, b.RunOnRelease, b.Repeating, b.Sh)
 }
 
-func (r *GoRPC) UnbindAll(_ struct{}, _ *struct{}) error {
+func (r *App) UnbindAll(_ struct{}, _ *struct{}) error {
 	return unbindAll(r.X)
 }
 
-func (r *GoRPC) Unbind(b shared.Binding, _ *struct{}) error {
+func (r *App) Unbind(b shared.Binding, _ *struct{}) error {
 	// Because workaround for xorg key repeating uses both release and press
 	// functions, we can't easily unbind just the release or just the press
 	// event, so we unbind both.
-	err := unbind(r.X, b.Btn, !b.RunOnRelease)
+
+	err := unbind(r.X, b.Btn, !b.RunOnRelease) //nolint:errcheck
 	if err != nil {
-		_ = err // skip
+		log.Println(err)
 	}
 
 	return unbind(r.X, b.Btn, b.RunOnRelease)

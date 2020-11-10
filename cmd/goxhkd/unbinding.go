@@ -37,10 +37,12 @@ func unbindAll(x *xgbutil.XUtil) error {
 	return nil
 }
 
+// unbind removes all callbacks of one type (onpress/onrelease) from a button.
+// It's just a wrapper over detach().
 func unbind(xu *xgbutil.XUtil, btn string, onRelease bool) error {
 	mod, codes, err := keybind.ParseString(xu, btn)
 	if err != nil {
-		err = fmt.Errorf(": %w", err)
+		err = fmt.Errorf("parsing string: %w", err)
 		log.Printf("%v", err)
 
 		return err
@@ -59,13 +61,14 @@ func unbind(xu *xgbutil.XUtil, btn string, onRelease bool) error {
 	return nil
 }
 
-// detach ubinds a single keybinding. It's based on detach() from xgbutil (which
-// unbinds all keys from the window) and accesses things that shouldn't be
-// accessed.
+// detach removes all callbacks of one type (onpress/onrelease) from a button.
+// It's based on detach() from xgbutil (which unbinds all keys from the window)
+// and accesses things that xgbutil comments say shouldn't be accessed because
+// I don't see another way to do it.
 func detach(xu *xgbutil.XUtil, evtype int, win xproto.Window, mods uint16,
 	keycode xproto.Keycode) {
-	xu.KeybindsLck.RLock()
-	defer xu.KeybindsLck.RUnlock()
+	xu.KeybindsLck.Lock()
+	defer xu.KeybindsLck.Unlock()
 
 	for key := range xu.Keybinds {
 		if win != key.Win || keycode != key.Code ||
@@ -80,23 +83,24 @@ func detach(xu *xgbutil.XUtil, evtype int, win xproto.Window, mods uint16,
 func ungrab(xu *xgbutil.XUtil, key xgbutil.KeyKey) {
 	xu.Keygrabs[key] -= len(xu.Keybinds[key])
 
-	if xu.Keygrabs[key] == 0 {
-		delete(xu.Keybinds, key)
-
-		// check if the other event type is used and ungrab key if it isn't
-		var otherEvType int
-
-		if key.Evtype == xevent.KeyPress {
-			otherEvType = xevent.KeyRelease
-		} else {
-			otherEvType = xevent.KeyPress
-		}
-
-		otherKey := key
-		otherKey.Evtype = otherEvType
-
-		if xu.Keygrabs[otherKey] == 0 {
-			keybind.Ungrab(xu, key.Win, key.Mod, key.Code)
-		}
+	if xu.Keygrabs[key] != 0 {
+		return
 	}
+
+	delete(xu.Keybinds, key)
+
+	// Check if the other event type is used. If it isn't, then we can
+	// ungrab the key completely.
+	otherKey := key
+	if key.Evtype == xevent.KeyPress {
+		otherKey.Evtype = xevent.KeyRelease
+	} else {
+		otherKey.Evtype = xevent.KeyPress
+	}
+
+	if xu.Keygrabs[otherKey] != 0 {
+		return
+	}
+
+	keybind.Ungrab(xu, key.Win, key.Mod, key.Code)
 }

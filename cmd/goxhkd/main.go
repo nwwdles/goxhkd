@@ -37,8 +37,10 @@ import (
 	"gitlab.com/cupnoodles14/goxhkd/pkg/shared"
 )
 
-const AppName = "goxhkd"
-const InitialRcRunDelay = 200 * time.Millisecond
+const (
+	appName           = "goxhkd"
+	initialRcRunDelay = 200 * time.Millisecond
+)
 
 func main() {
 	conn := shared.DefaultSocketConnection()
@@ -53,13 +55,12 @@ func main() {
 
 	keybind.Initialize(X)
 
-	ra := GoRPC{
+	ra := App{
 		X:    X,
 		Conn: conn,
 	}
 
 	serverErrors := make(chan error, 1)
-
 	go func() { serverErrors <- ra.listenAndServe() }()
 
 	osSignals := make(chan os.Signal, 1)
@@ -67,16 +68,16 @@ func main() {
 
 	go func() { xevent.Main(X) }()
 
-	log.Println(AppName, "started. Start pressing keys!")
-
 	// run RC file
 	go func() {
-		time.Sleep(InitialRcRunDelay)
+		time.Sleep(initialRcRunDelay)
 
 		if err := runRc(); err != nil {
 			fmt.Println("RC file couldn't be executed:", err)
 		}
 	}()
+
+	log.Println(appName, "started. Start pressing keys!")
 
 	select {
 	case err := <-serverErrors:

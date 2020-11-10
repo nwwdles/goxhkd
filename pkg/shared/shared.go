@@ -22,6 +22,8 @@
 
 package shared
 
+import "github.com/BurntSushi/xgb/xproto"
+
 const DefaultSocketAddr = "/tmp/goxhkd.sock"
 
 type Connection struct {
@@ -37,9 +39,10 @@ func DefaultSocketConnection() *Connection {
 }
 
 type Binding struct {
-	Cmd          string
+	Cmd          []string
 	Btn          string
 	RunOnRelease bool
 	Repeating    bool
 	Sh           bool
+	Window       xproto.Window
 }
