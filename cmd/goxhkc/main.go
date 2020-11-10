@@ -25,6 +25,7 @@ package main
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"net/rpc"
 
@@ -33,6 +34,12 @@ import (
 )
 
 var ErrNoAction = errors.New("button requires either -command or -clear action")
+
+// set via ldflags
+var (
+	version = "dev"
+	build   = ""
+)
 
 func run() (err error) {
 	conn := shared.DefaultSocketConnection()
@@ -45,8 +52,13 @@ func run() (err error) {
 	onRelease := flag.Bool("onrelease", false, "run command on button release")
 	repeating := flag.Bool("repeat", false, "repeatedly run command while the button is pressed")
 	clearAll := flag.Bool("clearall", false, "clear all bindings")
-
+	v := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
+
+	if *v {
+		fmt.Println(version, build)
+		return
+	}
 
 	c, err := rpc.Dial(conn.Network, conn.Address)
 	if err != nil {

@@ -42,11 +42,23 @@ const (
 	initialRcRunDelay = 200 * time.Millisecond
 )
 
+// set via ldflags
+var (
+	version = "dev"
+	build   = ""
+)
+
 func main() {
 	conn := shared.DefaultSocketConnection()
 	flag.StringVar(&conn.Network, "network", conn.Network, "specify connection network (unix, tcp, ...)")
 	flag.StringVar(&conn.Address, "address", conn.Address, "specify connection address (socket path, host, ...)")
+	v := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
+
+	if *v {
+		fmt.Println(version, build)
+		return
+	}
 
 	X, err := xgbutil.NewConn()
 	if err != nil {
