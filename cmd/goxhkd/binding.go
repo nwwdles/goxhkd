@@ -47,14 +47,14 @@ func keyIsPressed(x *xgbutil.XUtil, keycode xproto.Keycode) (bool, error) {
 }
 
 func bindCommand(x *xgbutil.XUtil, w xproto.Window, btn string, cmd []string, runOnRelease, repeating, sh bool) error {
-	log.Printf("grabbing %s (window: %d): %s", btn, w, cmd)
+	if sh {
+		cmd = append([]string{"sh", "-c"}, cmd...)
+	}
+
+	log.Printf("grabbing %s (window: %d): %+s", btn, w, cmd)
+
 	runner := func() error {
-		if sh {
-			cmd = append([]string{"sh", "-c"}, cmd...)
-		}
-
 		log.Println("Running:", cmd)
-
 		return exec.Command(cmd[0], cmd[1:]...).Start() // #nosec
 	}
 
