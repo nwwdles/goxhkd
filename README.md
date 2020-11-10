@@ -20,14 +20,11 @@ The config file is a shell script. It should contain a shebang and be executable
 goxhkc -clearall
 
 for i in $(seq 9); do
-      switchcmd="bspc desktop -f '^$i'"
-      movecmd="bspc node -d '^$i'"
-      goxhkc -button Mod4-$i "$switchcmd"
-      goxhkc -button Mod4-Shift-$i "$movecmd"
+      goxhkc -button Mod4-$i bspc desktop -f "^$i"
+      goxhkc -button Mod4-Shift-$i bspc node -d "^$i"
 done
 
-goxhkc -button Mod4-Q "bspc node -c"
-
+goxhkc -button Mod4-Q bspc node -c
 goxhkc -button Mod4-Return xterm
 goxhkc -button Mod4-W notify-send "text" "subtext"
 ```
