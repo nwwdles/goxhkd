@@ -2,11 +2,35 @@
 
 A simple X11 hotkey daemon using [xgbutil](https://github.com/BurntSushi/xgbutil).
 
-The config file is a shell script (see `examples/`). It should contain a shebang and be executable. It's executed by the goxhkd daemon on start after a small delay. Next config paths are checked:
+The config file is a shell script. It should contain a shebang and be executable. It's executed by the goxhkd daemon on start after a small delay. The following paths are checked:
 
 - `$XDG_CONFIG_HOME/goxhkd/goxhkdrc` (if `$XDG_CONFIG_HOME` isn't set, it falls back to `$HOME/.config`)
 - `$HOME/.goxhkdrc`
 - `/etc/goxhkd/goxhkdrc`
+
+## Building
+
+- `make build` will build and place the binaries into the project root.
+- `make install` will install them to `$GOPATH/bin`.
+
+## Example config
+
+```sh
+#!/bin/sh
+goxhkc -clearall
+
+for i in $(seq 9); do
+      switchcmd="bspc desktop -f '^$i'"
+      movecmd="bspc node -d '^$i'"
+      goxhkc -button Mod4-$i "$switchcmd"
+      goxhkc -button Mod4-Shift-$i "$movecmd"
+done
+
+goxhkc -button Mod4-Q "bspc node -c"
+
+goxhkc -button Mod4-Return xterm
+goxhkc -button Mod4-W notify-send "text" "subtext"
+```
 
 ## Controller
 
@@ -16,12 +40,8 @@ Usage of goxhkc:
         specify connection address (socket path, host, ...) (default "/tmp/goxhkd.sock")
   -button string
         specify a button
-  -clear
-        clear the button
   -clearall
         clear all bindings
-  -command string
-        set command for the button
   -network string
         specify connection network (unix, tcp, ...) (default "unix")
   -onrelease
@@ -30,6 +50,10 @@ Usage of goxhkc:
         repeatedly run command while the button is pressed
   -sh
         run command with 'sh -c ...'
+  -version
+        print version and exit
+  -window uint
+        specify a window
 ```
 
 ## Daemon
@@ -40,4 +64,6 @@ Usage of goxhkd:
         specify connection address (socket path, host, ...) (default "/tmp/goxhkd.sock")
   -network string
         specify connection network (unix, tcp, ...) (default "unix")
+  -version
+        print version and exit
 ```
