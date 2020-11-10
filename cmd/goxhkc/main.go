@@ -37,7 +37,7 @@ var ErrNoAction = errors.New("button requires either -command or -clear action")
 
 // set via ldflags
 var (
-	version = "dev"
+	version = "0.1.0"
 	build   = ""
 )
 
