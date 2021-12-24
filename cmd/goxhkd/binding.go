@@ -55,7 +55,13 @@ func bindCommand(x *xgbutil.XUtil, w xproto.Window, btn string, cmd []string, ru
 
 	runner := func() error {
 		log.Println("Running:", cmd)
-		return exec.Command(cmd[0], cmd[1:]...).Start() // #nosec
+		run := exec.Command(cmd[0], cmd[1:]...)
+        err := run.Start() // #nosec
+        if err != nil {
+            log.Print(err)
+        }
+        _ = run.Wait()
+        return err
 	}
 
 	if repeating {
@@ -110,10 +116,7 @@ func bindCmd(x *xgbutil.XUtil, w xproto.Window, btn string, runOnRelease bool, r
 			if runOnRelease && p {
 				return
 			}
-
-			if err = runner(); err != nil {
-				log.Print(err)
-			}
+            go runner()
 		}
 	}
 
