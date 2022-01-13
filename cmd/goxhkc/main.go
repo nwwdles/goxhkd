@@ -51,6 +51,7 @@ func run() (err error) {
 	sh := flag.Bool("sh", false, "run command with 'sh -c ...'")
 	onRelease := flag.Bool("onrelease", false, "run command on button release")
 	repeating := flag.Bool("repeat", false, "repeatedly run command while the button is pressed")
+	multi := flag.Bool("multi", false, "allow for multiple bindings to the same button")
 	clearAll := flag.Bool("clearall", false, "clear all bindings")
 	v := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
@@ -74,6 +75,12 @@ func run() (err error) {
 
 		return ErrNoAction
 	case len(flag.Args()) > 0:
+		if *multi == false {
+			c.Call("App.Unbind", shared.Binding{
+				Btn:          *btn,
+				RunOnRelease: *onRelease,
+			}, nil)
+		}
 		return c.Call("App.BindCommand", shared.Binding{
 			Cmd:          flag.Args(),
 			Btn:          *btn,
