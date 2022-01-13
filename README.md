@@ -39,6 +39,8 @@ Usage of goxhkc:
         specify a button
   -clearall
         clear all bindings
+  -multi
+        allow for multiple bindings to the same button
   -network string
         specify connection network (unix, tcp, ...) (default "unix")
   -onrelease
