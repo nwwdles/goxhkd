@@ -1,48 +1,7 @@
-run:
-  build-tags:
-    - integration
-
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-    disabled-checks:
-      - whyNoLint
-    settings:
-      hugeParam:
-        sizeThreshold: 96
-  govet:
-    enable-all: true
-  prealloc:
-    for-loops: true
-
 linters:
-  presets:
-    - bugs
-    - unused
-    - performance
-    - format
   enable:
-    - golint
-    - stylecheck
-    - interfacer
-    - unconvert
-    - asciicheck
-    - misspell
-    - dogsled
-    - nakedret
+    - revive
     - gocritic
-    - whitespace
-    - goprintffuncname
-    - goerr113
-    - nestif
-    - nolintlint
 
 issues:
   exclude-rules:
