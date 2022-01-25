@@ -75,8 +75,8 @@ func run() (err error) {
 
 		return ErrNoAction
 	case len(flag.Args()) > 0:
-		if *multi == false {
-			c.Call("App.Unbind", shared.Binding{
+		if !*multi {
+			_ = c.Call("App.Unbind", shared.Binding{
 				Btn:          *btn,
 				RunOnRelease: *onRelease,
 			}, nil)

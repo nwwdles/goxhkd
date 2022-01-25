@@ -55,17 +55,17 @@ func getSearchPaths() []string {
 	}
 }
 
-func runRc() (err error) {
+func runRc() error {
 	for _, path := range getSearchPaths() {
-		err = exec.Command(path).Run()
+		err := exec.Command(path).Run()
 
 		switch {
 		case err == nil:
-			return
+			return nil
 		case !errors.Is(err, os.ErrNotExist):
-			return
+			return err
 		}
 	}
 
-	return err
+	return nil
 }

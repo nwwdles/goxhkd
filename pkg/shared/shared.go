@@ -39,10 +39,10 @@ func DefaultSocketConnection() *Connection {
 }
 
 type Binding struct {
-	Cmd          []string
 	Btn          string
+	Cmd          []string
+	Window       xproto.Window
 	RunOnRelease bool
 	Repeating    bool
 	Sh           bool
-	Window       xproto.Window
 }

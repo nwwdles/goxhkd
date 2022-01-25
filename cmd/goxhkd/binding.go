@@ -53,15 +53,14 @@ func bindCommand(x *xgbutil.XUtil, w xproto.Window, btn string, cmd []string, ru
 
 	log.Printf("grabbing %s (window: %d): %+s", btn, w, cmd)
 
-	runner := func() error {
+	runner := func() {
 		log.Println("Running:", cmd)
-		run := exec.Command(cmd[0], cmd[1:]...)
-		err := run.Start() // #nosec
- 		if err != nil {
+		run := exec.Command(cmd[0], cmd[1:]...) // #nosec
+		err := run.Start()
+		if err != nil {
 			log.Print(err)
 		}
 		_ = run.Wait()
-		return err
 	}
 
 	if repeating {
@@ -71,23 +70,19 @@ func bindCommand(x *xgbutil.XUtil, w xproto.Window, btn string, cmd []string, ru
 	return bindCmd(x, w, btn, runOnRelease, runner)
 }
 
-func bindCmdRepeating(x *xgbutil.XUtil, w xproto.Window, btn string, runOnRelease bool, runCmd func() error) error {
+func bindCmdRepeating(x *xgbutil.XUtil, w xproto.Window, btn string, runOnRelease bool, runner func()) error {
 	if !runOnRelease {
 		return keybind.KeyPressFun(func(x *xgbutil.XUtil, e xevent.KeyPressEvent) {
-			if err := runCmd(); err != nil {
-				log.Println(err)
-			}
+			runner()
 		}).Connect(x, w, btn, true)
 	}
 
 	return keybind.KeyReleaseFun(func(x *xgbutil.XUtil, e xevent.KeyReleaseEvent) {
-		if err := runCmd(); err != nil {
-			log.Println(err)
-		}
+		runner()
 	}).Connect(x, w, btn, true)
 }
 
-func bindCmd(x *xgbutil.XUtil, w xproto.Window, btn string, runOnRelease bool, runner func() error) error {
+func bindCmd(x *xgbutil.XUtil, w xproto.Window, btn string, runOnRelease bool, runner func()) error {
 	var (
 		pressFun,
 		releaseFun func(e timedKeyEvent)
@@ -106,14 +101,13 @@ func bindCmd(x *xgbutil.XUtil, w xproto.Window, btn string, runOnRelease bool, r
 
 			// keyIsPressed is used to detect artificial events in cases when
 			// the command is bound to key release.
-			p, err := keyIsPressed(x, e.Keycode())
+			pressed, err := keyIsPressed(x, e.Keycode())
 			if err != nil {
 				log.Print(err)
-
 				return
 			}
 
-			if runOnRelease && p {
+			if runOnRelease && pressed {
 				return
 			}
 			go runner()

@@ -84,7 +84,7 @@ func (r *App) Unbind(b shared.Binding, _ *struct{}) error {
 	// functions, we can't easily unbind just the release or just the press
 	// event, so we unbind both.
 
-	err := unbind(r.X, b.Btn, !b.RunOnRelease) //nolint:errcheck
+	err := unbind(r.X, b.Btn, !b.RunOnRelease)
 	if err != nil {
 		log.Println(err)
 	}

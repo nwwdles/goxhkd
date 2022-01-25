@@ -5,7 +5,6 @@ run:
 linters-settings:
   errcheck:
     check-type-assertions: true
-    check-blank: true
   gocritic:
     enabled-tags:
       - diagnostic
